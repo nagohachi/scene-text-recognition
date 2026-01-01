@@ -1,14 +1,28 @@
+from typing import Literal
+
 import torch
 import torch.nn as nn
+
+Stride = int | tuple[int, int]
+
+
+def _to_tuple(stride: Stride) -> tuple[int, int]:
+    if isinstance(stride, int):
+        return (stride, stride)
+    return stride
 
 
 class PreNormConv(nn.Module):
     def __init__(
-        self, in_channels: int, out_channels: int, kernel_size: int, stride: int = 1
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: int,
+        stride: Stride = 1,
     ) -> None:
         super().__init__()
         self.kernel_size = kernel_size
-        self.stride = stride
+        self.stride = _to_tuple(stride)
         self.padding = kernel_size // 2
         self.dilation = 1
 
@@ -19,17 +33,19 @@ class PreNormConv(nn.Module):
         )
 
     def calc_out_length(self, xlens: torch.Tensor) -> torch.Tensor:
+        stride_w = self.stride[1]
         return (
             xlens + 2 * self.padding - self.dilation * (self.kernel_size - 1) - 1
-        ) // self.stride + 1
+        ) // stride_w + 1
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.conv(self.relu(self.norm(x)))
 
 
-class BasicBlock(nn.Module):
-    def __init__(self, in_channels: int, out_channels: int, stride: int) -> None:
+class BasicBlockV2(nn.Module):
+    def __init__(self, in_channels: int, out_channels: int, stride: Stride) -> None:
         super().__init__()
+        stride_tuple = _to_tuple(stride)
         self.pre_norm_conv1 = PreNormConv(
             in_channels, out_channels, kernel_size=3, stride=stride
         )
@@ -38,10 +54,12 @@ class BasicBlock(nn.Module):
         )
         self.shortcut = (
             nn.Sequential(
-                nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride),
+                nn.Conv2d(
+                    in_channels, out_channels, kernel_size=1, stride=stride_tuple
+                ),
                 nn.BatchNorm2d(out_channels),
             )
-            if in_channels != out_channels or stride != 1
+            if in_channels != out_channels or stride_tuple != (1, 1)
             else nn.Identity()
         )
 
@@ -59,7 +77,24 @@ class BasicBlock(nn.Module):
         return (x, xlens)
 
 
-class Conv2DFeatureExtractor(nn.Module):
+class ResnetV2Stage(nn.Module):
+    def __init__(
+        self, in_channels: int, out_channels: int, stride: Stride, num_blocks: int
+    ) -> None:
+        super().__init__()
+        self.blocks = nn.ModuleList()
+        for i in range(num_blocks):
+            if i == 0:
+                self.blocks.append(BasicBlockV2(in_channels, out_channels, stride))
+            else:
+                self.blocks.append(BasicBlockV2(out_channels, out_channels, 1))
+
+    def forward(
+        self, x: torch.Tensor, xlens: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        for block in self.blocks:
+            x, xlens = block(x, xlens)
+        return x, xlens
     def __init__(
         self,
         num_layers: int,
