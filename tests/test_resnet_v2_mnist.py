@@ -15,7 +15,7 @@ class MNISTClassifier(L.LightningModule):
             in_channels=1, type="resnet18"
         )
         self.pool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(512, 10)
+        self.fc = nn.Linear(self.feature_extractor.out_size, 10)
         self.criterion = nn.CrossEntropyLoss()
 
         self.training_step_losses: list[float] = []
