@@ -99,6 +99,7 @@ class ResnetV2Stage(nn.Module):
 
 class ResnetV2FeatureExtractor(nn.Module):
     def __init__(self, in_channels: int, type: Literal["resnet18",]) -> None:
+        super().__init__()
         self.stem = nn.Sequential(
             nn.Conv2d(in_channels, 64, kernel_size=3, padding=1),
             nn.BatchNorm2d(64),
@@ -106,11 +107,13 @@ class ResnetV2FeatureExtractor(nn.Module):
         )
         match type:
             case "resnet18":
-                self.model = nn.Sequential(
-                    ResnetV2Stage(64, 64, (2, 2), 2),
-                    ResnetV2Stage(64, 128, (2, 2), 2),
-                    ResnetV2Stage(128, 256, (2, 1), 2),
-                    ResnetV2Stage(256, 512, (2, 1), 2),
+                self.stages = nn.ModuleList(
+                    [
+                        ResnetV2Stage(64, 64, (2, 2), 2),
+                        ResnetV2Stage(64, 128, (2, 2), 2),
+                        ResnetV2Stage(128, 256, (2, 1), 2),
+                        ResnetV2Stage(256, 512, (2, 1), 2),
+                    ]
                 )
             case _:
                 raise NotImplementedError()
@@ -123,5 +126,6 @@ class ResnetV2FeatureExtractor(nn.Module):
         self, x: torch.Tensor, xlens: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor]:
         x = self.stem(x)
-        x, xlens = self.model(x, xlens)
+        for stage in self.stages:
+            x, xlens = stage(x, xlens)
         return x, xlens
