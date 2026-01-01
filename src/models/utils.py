@@ -19,5 +19,5 @@ def lens_to_mask(lens: torch.Tensor) -> torch.Tensor:
             [False, False, False,  True,  True]])
     """
     max_length = lens.max().item()
-    indices = torch.arange(max_length)
+    indices = torch.arange(max_length, device=lens.device)
     return indices >= lens[:, None]
