@@ -29,10 +29,15 @@ class CTCModel(nn.Module):
                     f"Unknown feature extractor: {config.feature_extractor.type}"
                 )
 
+        feature_out_height = self.feature_extractor.out_height(
+            config.feature_extractor.input_height
+        )
+        pre_encoder_input_size = self.feature_extractor.out_size * feature_out_height
+
         match config.pre_encoder.type:
             case "linear":
                 self.pre_encoder = nn.Linear(
-                    self.feature_extractor.out_size, config.encoder.hidden_size
+                    pre_encoder_input_size, config.encoder.hidden_size
                 )
             case None:
                 self.pre_encoder = nn.Identity()

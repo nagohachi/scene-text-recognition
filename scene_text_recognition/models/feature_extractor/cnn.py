@@ -124,6 +124,13 @@ class ResnetV2FeatureExtractor(nn.Module):
     def out_size(self) -> int:
         return 512
 
+    @property
+    def height_reduction(self) -> int:
+        return 16
+
+    def out_height(self, input_height: int) -> int:
+        return input_height // self.height_reduction
+
     def forward(
         self, x: torch.Tensor, xlens: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor]:

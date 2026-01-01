@@ -6,6 +6,7 @@ from typing import Literal
 class FeatureExtractorConfig:
     type: Literal["resnet18"]
     in_channels: int = 3
+    input_height: int = 32
 
 
 @dataclass
