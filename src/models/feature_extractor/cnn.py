@@ -98,9 +98,7 @@ class ResnetV2Stage(nn.Module):
 
 
 class ResnetV2FeatureExtractor(nn.Module):
-    def __init__(
-        self, in_channels: int, out_channels: int, type: Literal["resnet18",]
-    ) -> None:
+    def __init__(self, in_channels: int, type: Literal["resnet18",]) -> None:
         self.stem = nn.Sequential(
             nn.Conv2d(in_channels, 64, kernel_size=3, padding=1),
             nn.BatchNorm2d(64),
@@ -116,6 +114,10 @@ class ResnetV2FeatureExtractor(nn.Module):
                 )
             case _:
                 raise NotImplementedError()
+
+    @property
+    def out_size(self) -> int:
+        return 512
 
     def forward(
         self, x: torch.Tensor, xlens: torch.Tensor
