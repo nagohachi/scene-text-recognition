@@ -29,6 +29,14 @@ class CTCModel(nn.Module):
                     f"Unknown feature extractor: {config.feature_extractor.type}"
                 )
 
+        match config.pre_encoder.type:
+            case "linear":
+                self.pre_encoder = nn.Linear(
+                    self.feature_extractor.out_size, config.encoder.hidden_size
+                )
+            case None:
+                self.pre_encoder = nn.Identity()
+
         match config.encoder.type:
             case "transformer":
                 self.encoder = TransformerEncoder(
@@ -59,6 +67,8 @@ class CTCModel(nn.Module):
 
         # (batch, channels, height, width) -> (batch, width, channels * height)
         features = rearrange(features, "b c h w -> b w (c h)")
+
+        features = self.pre_encoder(features)
 
         encoded, xlens = self.encoder(features, xlens)
         return self.ctc_decoder(encoded, xlens, targets, target_lens)

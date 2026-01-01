@@ -9,6 +9,11 @@ class FeatureExtractorConfig:
 
 
 @dataclass
+class PreEncoderConfig:
+    type: Literal["linear"] | None
+
+
+@dataclass
 class EncoderConfig:
     type: Literal["transformer"]
     hidden_size: int
@@ -26,5 +31,6 @@ class CTCDecoderConfig:
 @dataclass
 class CTCModelConfig:
     feature_extractor: FeatureExtractorConfig
+    pre_encoder: PreEncoderConfig
     encoder: EncoderConfig
     decoder: CTCDecoderConfig
