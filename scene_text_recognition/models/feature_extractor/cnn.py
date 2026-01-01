@@ -3,6 +3,8 @@ from typing import Literal
 import torch
 import torch.nn as nn
 
+from scene_text_recognition.models.feature_extractor.schemas import FeatureExtractorBase
+
 Stride = int | tuple[int, int]
 
 
@@ -12,7 +14,7 @@ def _to_tuple(stride: Stride) -> tuple[int, int]:
     return stride
 
 
-class PreNormConv(nn.Module):
+class PreNormConv(nn.Module, FeatureExtractorBase):
     def __init__(
         self,
         in_channels: int,
