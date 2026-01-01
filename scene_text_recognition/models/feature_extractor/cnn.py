@@ -14,7 +14,7 @@ def _to_tuple(stride: Stride) -> tuple[int, int]:
     return stride
 
 
-class PreNormConv(nn.Module, FeatureExtractorBase):
+class PreNormConv(FeatureExtractorBase):
     def __init__(
         self,
         in_channels: int,
