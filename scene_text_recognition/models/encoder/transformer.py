@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from src.models.utils import lens_to_mask
+from scene_text_recognition.models.utils import lens_to_mask
 
 
 class TransformerEncoder(nn.Module):
