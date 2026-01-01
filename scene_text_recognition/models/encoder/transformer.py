@@ -1,10 +1,11 @@
 import torch
 import torch.nn as nn
 
+from scene_text_recognition.models.encoder.schamas import EncoderBase
 from scene_text_recognition.models.utils import lens_to_mask
 
 
-class TransformerEncoder(nn.Module):
+class TransformerEncoder(EncoderBase):
     def __init__(self, hidden_size: int, num_heads: int, num_layers: int) -> None:
         super().__init__()
         self.hidden_size = hidden_size
