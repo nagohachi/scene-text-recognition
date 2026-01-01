@@ -18,6 +18,7 @@ class EncoderConfig:
 
 @dataclass
 class CTCDecoderConfig:
+    type: Literal["ctc"]
     reduction: Literal["mean", "sum", "none"] = "mean"
     zero_infinity: bool = True
 
