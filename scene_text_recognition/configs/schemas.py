@@ -18,8 +18,6 @@ class EncoderConfig:
 
 @dataclass
 class CTCDecoderConfig:
-    blank_id: int
-    padding_id: int
     reduction: Literal["mean", "sum", "none"] = "mean"
     zero_infinity: bool = True
 
@@ -29,4 +27,3 @@ class CTCModelConfig:
     feature_extractor: FeatureExtractorConfig
     encoder: EncoderConfig
     decoder: CTCDecoderConfig
-    vocab_size: int

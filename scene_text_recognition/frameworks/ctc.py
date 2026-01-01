@@ -9,12 +9,14 @@ from scene_text_recognition.frameworks.schemas import CTCOutput
 from scene_text_recognition.models.decoder.ctc import CTCDecoder
 from scene_text_recognition.models.encoder.transformer import TransformerEncoder
 from scene_text_recognition.models.feature_extractor.cnn import ResnetV2FeatureExtractor
+from scene_text_recognition.tokenizer import CTCTokenizer
 
 
 class CTCModel(nn.Module):
-    def __init__(self, config: CTCModelConfig) -> None:
+    def __init__(self, config: CTCModelConfig, tokenizer: CTCTokenizer) -> None:
         super().__init__()
         self.config = config
+        self.tokenizer = tokenizer
 
         match config.feature_extractor.type:
             case "resnet18":
@@ -38,11 +40,11 @@ class CTCModel(nn.Module):
                 raise ValueError(f"Unknown encoder: {config.encoder.type}")
 
         self.ctc_decoder = CTCDecoder(
-            blank_id=config.decoder.blank_id,
-            padding_id=config.decoder.padding_id,
+            blank_id=tokenizer.blank_id,
+            padding_id=tokenizer.pad_id,
             reduction=config.decoder.reduction,
             input_size=config.encoder.hidden_size,
-            output_size=config.vocab_size,
+            output_size=tokenizer.vocab_size,
             zero_infinity=config.decoder.zero_infinity,
         )
 
