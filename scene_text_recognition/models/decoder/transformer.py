@@ -21,7 +21,7 @@ class TransformerDecoder(nn.Module):
         xlens: torch.Tensor,
         encoder_out: torch.Tensor,
         encoder_out_lens: torch.Tensor,
-    ) -> torch.Tensor:
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         """
         Args:
             x (torch.Tensor): the sequence to the decoder: (batch_size, seq_len, hidden_size).
@@ -42,4 +42,4 @@ class TransformerDecoder(nn.Module):
             tgt_is_causal=True,
         )
 
-        return decoder_out
+        return decoder_out, xlens
