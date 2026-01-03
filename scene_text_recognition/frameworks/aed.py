@@ -137,9 +137,9 @@ class AttnBasedEncDecModel(nn.Module):
         batch_size = x.size(0)
 
         assert (targets is None) == (target_lens is None)
-        test_mode = targets is None and target_lens is None
+        inference_mode = targets is None and target_lens is None
 
-        if test_mode:
+        if inference_mode:
             targets_sos_added = torch.full(
                 size=(batch_size, 1),
                 fill_value=self.tokenizer.sos_id,
@@ -163,7 +163,7 @@ class AttnBasedEncDecModel(nn.Module):
         log_probs = logits.float().log_softmax(dim=-1)
         predictions = log_probs.argmax(dim=-1)
 
-        if test_mode:
+        if inference_mode:
             loss = None
         else:
             loss = self._compute_loss(logits, targets_eos_added)
