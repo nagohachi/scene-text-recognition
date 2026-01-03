@@ -51,3 +51,4 @@ class AttnBasedEncDecModelConfig:
     pre_encoder: PreEncoderConfig
     encoder: EncoderConfig
     decoder: DecoderConfig
+    max_len: int

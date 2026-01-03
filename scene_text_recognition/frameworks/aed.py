@@ -171,3 +171,39 @@ class AttnBasedEncDecModel(nn.Module):
         return AEDOutput(
             logits=logits, log_probs=log_probs, predictions=predictions, loss=loss
         )
+
+    @torch.inference_mode()
+    def generate(self, x: torch.Tensor, xlens: torch.Tensor) -> torch.Tensor:
+        features, xlens = self.feature_extractor(x, xlens)
+        features = rearrange(features, "b c h w -> b w (c h)")
+
+        features = self.pre_encoder(features)
+
+        encoder_out, encoder_out_lens = self.encoder(features, xlens)
+
+        batch_size = x.size(0)
+        device = x.device
+
+        hyp = torch.full(
+            (batch_size, 1), self.tokenizer.sos_id, dtype=torch.long, device=device
+        )
+        finished = torch.zeros(batch_size, dtype=torch.bool, device=device)
+
+        for _ in range(self.config.max_len):
+            hyp_lens = torch.full(
+                (batch_size,), hyp.size(1), dtype=torch.long, device=device
+            )
+            decoder_in = self.embedding(hyp)
+            decoded, _ = self.decoder(
+                decoder_in, hyp_lens, encoder_out, encoder_out_lens
+            )
+            logits = self.lm_head(decoded)
+            next_token = logits[:, -1, :].argmax(dim=-1, keepdim=True)
+
+            hyp = torch.cat([hyp, next_token], dim=1)
+
+            finished = finished | (next_token.squeeze(-1) == self.tokenizer.eos_id)
+            if finished.all():
+                break
+
+        return hyp
