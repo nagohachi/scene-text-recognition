@@ -29,6 +29,7 @@ class TransformerDecoder(nn.Module):
             encoder_out (torch.Tensor): the sequence of the output of the encoder: (batch_size, seq_len, encoder_hidden_size).
             encoder_out_lens (torch.Tensor): the lenghts of encoder_out: (batch_size, ).
         """
+        x_padding_mask = lens_to_mask(xlens)
         encoder_out_padding_mask = lens_to_mask(encoder_out_lens)
         x_mask = nn.Transformer.generate_square_subsequent_mask(sz=x.size(1))
 
@@ -36,6 +37,7 @@ class TransformerDecoder(nn.Module):
             tgt=x,
             memory=encoder_out,
             tgt_mask=x_mask,
+            tgt_key_padding_mask=x_padding_mask,
             memory_key_padding_mask=encoder_out_padding_mask,
             tgt_is_causal=True,
         )
