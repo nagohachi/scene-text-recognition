@@ -76,9 +76,10 @@ class AttnBasedEncDecModel(nn.Module):
         self.loss = nn.CrossEntropyLoss(ignore_index=self.tokenizer.pad_id)
 
     def _compute_loss(
-        self, log_probs: torch.Tensor, targets: torch.Tensor
+        self, logits: torch.Tensor, targets: torch.Tensor
     ) -> torch.Tensor:
-        return self.loss.forward(log_probs, targets)
+        logits_ = rearrange(logits, "bs seq_len hidden_size -> bs hidden_size seq_len")
+        return self.loss.forward(logits_, targets)
 
     def _add_sos_eos(
         self, targets: torch.Tensor, target_lens: torch.Tensor
@@ -134,12 +135,26 @@ class AttnBasedEncDecModel(nn.Module):
         encoder_out, encoder_out_lens = self.encoder(features, xlens)
 
         batch_size = x.size(0)
-        if targets is None:
-            targets = torch.Tensor([self.tokenizer.SOS_TOKEN] * batch_size)
-        if target_lens is None:
-            target_lens = torch.tensor([1] * batch_size, dtype=torch.long)
 
-        decoder_in = self.embedding.forward(targets)
+        assert (targets is None) == (target_lens is None)
+        test_mode = targets is None and target_lens is None
+
+        if test_mode:
+            targets_sos_added = torch.full(
+                size=(batch_size, 1),
+                fill_value=self.tokenizer.sos_id,
+                dtype=torch.long,
+                device=x.device,
+            )
+            target_lens = torch.ones(batch_size, dtype=torch.long, device=x.device)
+        else:
+            assert targets is not None and target_lens is not None
+            targets_sos_added, targets_eos_added = self._add_sos_eos(
+                targets, target_lens
+            )
+            target_lens = target_lens + 1
+
+        decoder_in = self.embedding.forward(targets_sos_added)
         decoded, _ = self.decoder.forward(
             decoder_in, target_lens, encoder_out, encoder_out_lens
         )
@@ -147,7 +162,11 @@ class AttnBasedEncDecModel(nn.Module):
         logits = self.lm_head.forward(decoded)
         log_probs = logits.float().log_softmax(dim=-1)
         predictions = log_probs.argmax(dim=-1)
-        loss = self._compute_loss(log_probs, targets)
+
+        if test_mode:
+            loss = None
+        else:
+            loss = self._compute_loss(logits, targets_eos_added)
 
         return AEDOutput(
             logits=logits, log_probs=log_probs, predictions=predictions, loss=loss
