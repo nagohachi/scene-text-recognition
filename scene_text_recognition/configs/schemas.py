@@ -30,8 +30,24 @@ class CTCDecoderConfig:
 
 
 @dataclass
+class DecoderConfig:
+    type: Literal["transformer"]
+    hidden_size: int
+    num_heads: int
+    num_layers: int
+
+
+@dataclass
 class CTCModelConfig:
     feature_extractor: FeatureExtractorConfig
     pre_encoder: PreEncoderConfig
     encoder: EncoderConfig
     decoder: CTCDecoderConfig
+
+
+@dataclass
+class AttnBasedEncDecModelConfig:
+    feature_extractor: FeatureExtractorConfig
+    pre_encoder: PreEncoderConfig
+    encoder: EncoderConfig
+    decoder: DecoderConfig

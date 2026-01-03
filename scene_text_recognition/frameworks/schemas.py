@@ -10,3 +10,7 @@ class CTCOutput:
     log_probs: torch.Tensor  # (batch, seq_len, vocab_size)
     predictions: torch.Tensor  # (batch, seq_len) greedy decode結果
     loss: Optional[torch.Tensor] = None  # training時のみ
+
+
+class AEDOutput(CTCOutput):
+    pass
