@@ -200,6 +200,12 @@ class AttnBasedEncDecModel(nn.Module):
             logits = self.lm_head(decoded)
             next_token = logits[:, -1, :].argmax(dim=-1, keepdim=True)
 
+            next_token = torch.where(
+                finished.unsqueeze(-1),
+                torch.full_like(next_token, self.tokenizer.pad_id),
+                next_token,
+            )
+
             hyp = torch.cat([hyp, next_token], dim=1)
 
             finished = finished | (next_token.squeeze(-1) == self.tokenizer.eos_id)
