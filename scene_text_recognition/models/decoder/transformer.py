@@ -31,7 +31,9 @@ class TransformerDecoder(nn.Module):
         """
         x_padding_mask = lens_to_mask(xlens)
         encoder_out_padding_mask = lens_to_mask(encoder_out_lens)
-        x_mask = nn.Transformer.generate_square_subsequent_mask(sz=x.size(1))
+        x_mask = nn.Transformer.generate_square_subsequent_mask(
+            sz=x.size(1), device=x.device, dtype=x.dtype
+        )
 
         decoder_out = self.decoder.forward(
             tgt=x,
